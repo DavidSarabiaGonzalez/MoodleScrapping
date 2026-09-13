@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+salida/
+fixtures_html/
+aliases.local.json
+*.log
+.env
+playwright-browsers/

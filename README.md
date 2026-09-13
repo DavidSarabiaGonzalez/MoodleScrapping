@@ -31,7 +31,15 @@ Salida por tarea:
   descripcion.txt / *_online.txt              # cuando hay texto/enlaces
 ```
 
-## Interfaz web (recomendado)
+## Sin Python instalado: doble clic (Windows y Linux)
+
+**Windows:** doble clic en **`AulaVirtual.bat`** · **Linux:** doble clic o `./aula-virtual.sh` en terminal.
+
+Sin ventana de consola: usan tu **Brave** del sistema si lo tienes (evitan 650 MB de
+descarga); si no, descargan Chromium solo una vez. La primera vez crean `.venv`
+e instalan dependencias solos. Luego abren la interfaz en tu navegador.
+
+## Interfaz web (también sin instalador)
 
 ```bash
 .venv/bin/python -m moodle_scraper.gui
@@ -39,13 +47,13 @@ Salida por tarea:
 
 Abre una página local con el mismo estilo del informe:
 
-- Campo con la dirección de tu Aula Virtual (por defecto MurciaEduca).
-- **⬇ Iniciar copia de seguridad**: abre Chromium para login manual y muestra
+- Campo con la dirección de tu Aula Virtual (ej. `https://moodle.com`).
+- **⬇ Iniciar copia de seguridad**: abre el navegador para login manual y muestra
   el progreso y el registro en vivo aquí mismo.
 - **🔄 Regenerar página HTML**: rehace el informe sin descargar nada.
 - **📄 Abrir informe**: muestra tu `salida/index.html` con sus archivos.
 
-## Uso por terminal
+## Uso por terminal (alternativa)
 
 ```bash
 python3 -m venv .venv

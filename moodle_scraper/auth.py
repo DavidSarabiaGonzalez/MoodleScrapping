@@ -1,9 +1,67 @@
-"""Auth 100% manual: abre Chromium, el usuario loguea, reutilizamos la sesión solo en memoria."""
+"""Auth 100% manual: abre el navegador, el usuario loguea, reutilizamos la sesión solo en memoria.
+
+Intenta primero tu Brave del sistema (evita descargar 650 MB de Chromium);
+si no está, prueba Chrome/Edge del sistema, y solo al final Chromium de Playwright.
+"""
 from __future__ import annotations
 
 import logging
+import os
+import shutil
 import threading
 import time
+
+
+def _find_brave() -> str | None:
+    """Ruta a Brave si está instalado, o None."""
+    env = os.environ.get("BRAVE_PATH", "").strip()
+    if env and os.path.isfile(env):
+        return env
+    cands: list[str] = []
+    if os.name == "nt":
+        pf = os.environ.get("ProgramFiles", r"C:\Program Files")
+        pfx86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
+        local = os.environ.get("LOCALAPPDATA", "")
+        cands += [
+            os.path.join(pf, r"BraveSoftware\Brave-Browser\Application\brave.exe"),
+            os.path.join(pfx86, r"BraveSoftware\Brave-Browser\Application\brave.exe"),
+            os.path.join(local, r"BraveSoftware\Brave-Browser\Application\brave.exe"),
+        ]
+    else:
+        cands += [
+            "/usr/bin/brave-browser",
+            "/usr/bin/brave",
+            "/snap/bin/brave",
+            "/var/lib/flatpak/exports/bin/com.brave.Browser",
+            os.path.expanduser("~/.local/bin/brave"),
+        ]
+    for p in cands:
+        if p and os.path.isfile(p):
+            return p
+    for name in ("brave-browser", "brave", "brave.exe"):
+        w = shutil.which(name)
+        if w:
+            return w
+    return None
+
+
+def _launch_browser(playwright, log: logging.Logger | None = None):
+    """Brave -> Chrome/Edge del sistema -> Chromium descargado."""
+    log = log or logging.getLogger("moodle_scraper")
+    brave = _find_brave()
+    if brave:
+        try:
+            log.info(f"Usando Brave del sistema: {brave}")
+            return playwright.chromium.launch(headless=False, executable_path=brave)
+        except Exception as e:
+            log.warning(f"No pude usar Brave ({e}), pruebo Chrome/Edge...")
+    for channel in ("chrome", "msedge", "chrome-beta"):
+        try:
+            return playwright.chromium.launch(headless=False, channel=channel)
+        except Exception:
+            continue
+    log.info("Usando Chromium de Playwright (se descargará si hace falta).")
+    return playwright.chromium.launch(headless=False)
 
 
 def _login_detected(page) -> bool:
@@ -37,7 +95,7 @@ def login_manual(playwright, base_url: str, log: logging.Logger | None = None,
     Todo se registra en el log, no solo en consola.
     """
     log = log or logging.getLogger("moodle_scraper")
-    browser = playwright.chromium.launch(headless=False)
+    browser = _launch_browser(playwright, log)
     context = browser.new_context()
     page = context.new_page()
     try:
